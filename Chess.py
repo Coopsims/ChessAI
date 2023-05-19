@@ -9,8 +9,6 @@ import AI
 
 import csv
 import uuid
-def randomize_table(table, min_delta=-5, max_delta=5):
-    return [value + random.randint(min_delta, max_delta) for value in table]
 
 learning = 0
 while learning <= 100:
@@ -19,7 +17,7 @@ while learning <= 100:
     move_list = []
     while not board.is_checkmate() and not board.is_stalemate():
         if board.turn:
-            move1 = algor.best_move(board, 5)  # Adjust the depth as needed
+            move1 = algor.best_move(board, 4)  # Adjust the depth as needed
             if move1 is None:
                 break
             move_list.append(board.san(move1))
@@ -27,7 +25,7 @@ while learning <= 100:
 
             print(f"White move: {move1}")
             print(board)
-            if board.is_repetition(2):
+            if board.is_repetition(3):
                 print("Draw due to threefold repetition!")
                 break
         else:
