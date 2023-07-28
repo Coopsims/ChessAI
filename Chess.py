@@ -2,7 +2,8 @@ import csv
 import os
 import chess
 import random
-import algorithm as algor
+import algorithm1 as algor
+import Algorithm2 as algor2
 import chess.polyglot
 import AI
 # Initialize an empty chess board
@@ -17,7 +18,7 @@ while learning <= 100:
     move_list = []
     while not board.is_checkmate() and not board.is_stalemate():
         if board.turn:
-            move1 = algor.best_move(board, 4)  # Adjust the depth as needed
+            move1 = algor.best_move(board, 2)  # Adjust the depth as needed
             if move1 is None:
                 break
             move_list.append(board.san(move1))
@@ -29,7 +30,7 @@ while learning <= 100:
                 print("Draw due to threefold repetition!")
                 break
         else:
-            move2 = algor.best_move(board, 4)  # Adjust the depth as needed
+            move2 = algor.best_move(board, 2)  # Adjust the depth as needed
             if move2 is None:
                 break
             move_list.append(board.san(move2))
