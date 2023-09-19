@@ -1,74 +1,56 @@
+
+
+
 import chess
-# Minimax function with alpha-beta pruning.
-def minimax(board, depth, alpha, beta, maximizing_player):
-    if depth == 0 or board.is_game_over() or board.is_repetition(3):
-        if board.is_repetition(3):
-            return 0, None  # return 0 score indicating a draw
-        else:
-            return evaluation(board, depth), None
+import numpy as np
+from joblib import Parallel, delayed
 
-    board_hash = hash(str(board))
-    if board_hash in transposition_table:
-        return transposition_table[board_hash], None
 
-    if maximizing_player:
-        max_value = float('-inf')
-        best_move = None
+def minimax(board, depth, alpha, beta, maximizingPlayer):
+    if depth == 0 or board.is_game_over():
+        return evaluation(board)
+
+    if maximizingPlayer:
+        maxEval = float('-inf')
         for move in board.legal_moves:
             board.push(move)
-            eval_child, _ = minimax(board, depth - 1, alpha, beta, False)
+            eval = minimax(board, depth - 1, alpha, beta, False)
             board.pop()
-            if eval_child > max_value:
-                max_value = eval_child
-                best_move = move
-            alpha = max(alpha, eval_child)
+            maxEval = max(maxEval, eval)
+            alpha = max(alpha, eval)
             if beta <= alpha:
                 break
-        transposition_table[board_hash] = max_value
-        return max_value, best_move
+        return maxEval
     else:
-        min_value = float('inf')
-        best_move = None
+        minEval = float('inf')
         for move in board.legal_moves:
             board.push(move)
-            eval_child, _ = minimax(board, depth - 1, alpha, beta, True)
+            eval = minimax(board, depth - 1, alpha, beta, True)
             board.pop()
-            if eval_child < min_value:
-                min_value = eval_child
-                best_move = move
-            beta = min(beta, eval_child)
+            minEval = min(minEval, eval)
+            beta = min(beta, eval)
             if beta <= alpha:
                 break
-        transposition_table[board_hash] = min_value
-        return min_value, best_move
+        return minEval
 
-
-# Function to get the best move for the current player.
-transposition_table = {}
 
 def best_move(board, depth):
-    global transposition_table
-    transposition_table = {}  # Clear the transposition table
+    moves = list(board.legal_moves)
+    boards = [board.copy() for _ in moves]
+    for move, b in zip(moves, boards):
+        b.push(move)
 
-    best_move = None
-    best_value = float('-inf') if board.turn else float('inf')
+    # Use Parallel and delayed to create a parallel for loop
+    scores = Parallel(n_jobs=-1)(
+        delayed(minimax)(b, depth - 1, float('-inf'), float('inf'), not board.turn) for b in boards)
 
+    best_score = max(scores)
+    best_move = moves[scores.index(best_score)]
 
-    value, move = minimax(board, depth, float('-inf'), float('inf'), board.turn)
-    if board.turn and value > best_value:
-        best_value = value
-        best_move = move
-    elif not board.turn and value < best_value:
-        best_value = value
-        best_move = move
-
-    print(best_move, best_value)
     return best_move
 
 
-def evaluation(board, depth):
-
-    depth_score = (depth) * 10
+def evaluation(board):
 
     if board.is_checkmate():
         return -10000000 if board.turn else 10000000
@@ -105,7 +87,6 @@ def evaluation(board, depth):
         + 0.4 * center_control
         + 0.2 * pawn_structure
         + 0.4 * king_safety
-        + depth_score
     )
 
     return score
@@ -232,11 +213,11 @@ def evaluate_king_safety(board, color):
 def evaluate_castling(board):
     castling_bonus = 0
     if board.has_queenside_castling_rights(chess.WHITE):
-        castling_bonus += 1
+        castling_bonus += 10
     if board.has_kingside_castling_rights(chess.WHITE):
-        castling_bonus += 1
+        castling_bonus += 10
     if board.has_queenside_castling_rights(chess.BLACK):
-        castling_bonus -= 1
+        castling_bonus -= 10
     if board.has_kingside_castling_rights(chess.BLACK):
-        castling_bonus -= 1
+        castling_bonus -= 10
     return castling_bonus
