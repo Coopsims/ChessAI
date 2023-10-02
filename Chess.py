@@ -4,21 +4,22 @@ import chess
 import algorithm1 as algor
 import Algorithm2 as algor2
 import chess.polyglot
-
+import time
 def main():
     learning = 0
     while learning <= 100:
         board = chess.Board()
         initial_board = board.copy()  # Copy the initial board state here
         move_list = []
+        check_evaluation_polarities()
         while not board.is_checkmate() and not board.is_stalemate():
             if board.turn:
-                move2 = algor.best_move(board, 4)  # Adjust the depth as needed
+                move2 = algor.iterative_deepening_best_move(board, time.time(), max_depth=20)  # Adjust the depth as needed
                 if move2 is None:
                     break
                 move_list.append(board.san(move2))
                 board.push(move2)
-                print(f"Black move: {move2}")
+                print(f"White Move: {move2}")
                 print(board)
                 if board.is_repetition(3):
                     print("Draw due to threefold repetition!")
@@ -37,7 +38,7 @@ def main():
                 move_list.append(move1_san)
                 board.push(move1)
 
-                print(f"White move: {move1_san}")
+                print(f"Black move: {move1_san}")
                 print(board)
                 if board.is_repetition(3):
                     print("Draw due to threefold repetition!")
@@ -59,6 +60,24 @@ def main():
 
         print(f"Saved move list to {filename}")
         learning = 101
+
+
+def check_evaluation_polarities():
+    # Let's use a start position for our board
+    board = chess.Board()
+
+    # Evaluate the board from white's perspective
+    white_evaluation = algor.evaluation(board)
+
+    # Now, flip the board to black's perspective
+    board.turn = chess.BLACK
+    black_evaluation = algor.evaluation(board)
+
+    # Perform checks on the evaluation function
+
+    # Material
+    if algor.total_material(board) != -(white_evaluation - black_evaluation):
+        print("Polarity error in material evaluation.")
 
 if __name__ == "__main__":
     main()
